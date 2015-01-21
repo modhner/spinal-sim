@@ -21,7 +21,7 @@ document.body.appendChild step
 go = document.createElement "button"
 go.setText "Go"
 document.body.appendChild go
-going = no
+going = yes
 
 canvas = document.createElement "canvas"
 document.body.appendChild canvas
@@ -38,7 +38,7 @@ c.circle = (x,y,r)->
 c.clear = ->
 	c.clearRect(0,0,canvas.width,canvas.height)
 
-gravity = .001
+#gravity = .001
 ###
 class Vertebra
 	constructor: (x, y, n)->
@@ -104,16 +104,42 @@ FixedPosition.prototype.applyConstraint = function() {
 }
 ###
 
+Particle::draw = ()->
+	c.circle( @pos.x, @pos.y, 5 )
+	c.fill()
 
 spine = new VerletJS.Composite
+
+head = new Particle(new Vec2(100, 25))
+head.draw = ()->
+	c.circle @pos.x, @pos.y, 20
+	c.fill()
+	c.beginPath()
+	c.strokeStyle = "white"
+	if(@happy)
+		c.arc(@pos.x, @pos.y, 15, 0, Math.PI)
+	else
+		c.arc(@pos.x, @pos.y+50, 40, Math.PI*1.46, Math.PI*1.54)
+	c.lineWidth = 3
+	c.stroke()
+	c.beginPath();
+	c.arc(@pos.x-5, @pos.y, 4, 0, Math.PI*2)
+	c.stroke()
+	c.beginPath();
+	c.arc(@pos.x+5, @pos.y, 4, 0, Math.PI*2)
+	c.stroke()
+	c.fillStyle = "green"
+
+head.weight = 20
+spine.particles.push(head)
 
 for i in [0...24]
 	#new Point(100-cos(i/24*TAU)*20, i*10+20, i)
 	#new Particle(100-cos(i/24*TAU)*20, i*10+20, i)
 	spine.particles.push new Particle(
-		new Vec2(100-cos(i/24*TAU)*20, i*10+20)
+#		new Vec2(100-cos(i/24*TAU)*20, i*10+20)
+		new Vec2(100, i*10+45)
 	)
-
 
 
 #spine.push x: 100, y: 100
@@ -123,7 +149,7 @@ for i in [0...spine.particles.length-1]
 	spine.constraints.push new DistanceConstraint(
 		spine.particles[i]
 		spine.particles[i+1]
-		5, 10
+		5, spine.particles[i+1].pos.y - spine.particles[i].pos.y
 	)
 
 for i in [1...spine.particles.length-1]
@@ -144,6 +170,24 @@ spine.constraints.push new PinConstraint(
 	spine.particles[spine.particles.length-2].pos
 )
 
+spine.constraints.push new AngleConstraint(
+	spine.particles[24]
+	spine.particles[23]
+	spine.particles[11]
+	2.5
+)
+spine.constraints.push new AngleConstraint(
+	spine.particles[24]
+	spine.particles[23]
+	spine.particles[7]
+	2.5
+)
+spine.constraints.push new AngleConstraint(
+	spine.particles[24]
+	spine.particles[23]
+	spine.particles[0]
+	2.5
+)
 
 ###
 for( var i = 0 i <  23 i++ )
@@ -154,7 +198,7 @@ spine[23].constraint = new FixedPosition(spine[23], 100+Math.cos(23/24*Math.PI)*
 ###
 
 sim = new VerletJS(640, 480, canvas)
-sim.friction = 0.8
+sim.friction = 0.4
 sim.highlightColor = "#0f0"
 sim.composites.push(spine)
 
@@ -170,9 +214,17 @@ do animate = ->
 
 	c.fillStyle = "Green"
 
+	head.happy = true
+	threshold = 15
+	bottom = spine.particles[spine.particles.length-1]
 	for vertebra in spine.particles
-		c.circle vertebra.pos.x, vertebra.pos.y, 5 
-		c.fill()
+		if (
+			vertebra.pos.x < bottom.pos.x-threshold or
+			vertebra.pos.x > bottom.pos.x+threshold
+		)
+			head.happy = false
+	for vertebra in spine.particles
+		vertebra.draw()
 	
 	canvas.style.position = "absolute"
 
