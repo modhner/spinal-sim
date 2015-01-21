@@ -10,7 +10,11 @@
 	ctx.stroke = (color)->
 		ctx.strokeStyle = color if color
 		CanvasRenderingContext2D::stroke.apply ctx, []
-
+	
+	ctx.circle = (x,y,r)->
+		ctx.beginPath()
+		ctx.arc(x, y, r, 0, TAU, no)
+	
 	ctx.line = (a, b, c, d)->
 		if d?
 			[x1, y1, x2, y2] = [a, b, c, d]
@@ -20,13 +24,24 @@
 		ctx.beginPath()
 		ctx.moveTo(x1, y1)
 		ctx.lineTo(x2, y2)
-
+	
 	ctx.polygon = (points)->
 		ctx.beginPath()
 		ctx.lineTo(p.x, p.y) for p in points
 		ctx.closePath()
 	
+	ctx.clear = ->
+		ctx.clearRect(0, 0, canvas.width, canvas.height)
+	
 	canvas
+
+@E = (tagName)-> document.createElement(tagName)
+
+Element::setText = (text)->
+	if "textContent" of Element::
+		@textContent = text
+	else
+		@innerText = text
 
 @destroy = (thing)->
 	thing?.destroy?()
