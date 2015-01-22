@@ -19,6 +19,7 @@ class @Point
 		@y += @vy += @fy
 		@fx = 0
 		@fy = 0
+		
 		###
 		# @TODO have constraints collide as well
 		for solid in solids
